@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Country Information Agent</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f0f4f8;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+            padding: 40px;
+            width: 100%;
+            max-width: 640px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #718096;
+            font-size: 0.95rem;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+            color: #2d3748;
+        }
+
+        input[type="text"]:focus {
+            border-color: #4f46e5;
+        }
+
+        button {
+            padding: 12px 24px;
+            background: #4f46e5;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+
+        button:hover {
+            background: #4338ca;
+        }
+
+        button:disabled {
+            background: #a5b4fc;
+            cursor: not-allowed;
+        }
+
+        .suggestions {
+            margin-bottom: 24px;
+        }
+
+        .suggestions p {
+            font-size: 0.8rem;
+            color: #a0aec0;
+            margin-bottom: 8px;
+        }
+
+        .suggestion-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .chip {
+            background: #eef2ff;
+            color: #4f46e5;
+            border: none;
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .chip:hover {
+            background: #e0e7ff;
+        }
+
+        .result {
+            margin-top: 24px;
+            display: none;
+        }
+
+        .result-box {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .result-box.error {
+            background: #fff5f5;
+            border-color: #fed7d7;
+        }
+
+        .result-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #a0aec0;
+            margin-bottom: 8px;
+        }
+
+        .result-answer {
+            font-size: 1rem;
+            color: #2d3748;
+            line-height: 1.6;
+        }
+
+        .result-answer.error {
+            color: #c53030;
+        }
+
+        .result-meta {
+            margin-top: 12px;
+            font-size: 0.78rem;
+            color: #a0aec0;
+        }
+
+        .loader {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #a0aec0;
+            font-size: 0.9rem;
+        }
+
+        .loader span {
+            display: inline-block;
+            animation: pulse 1.2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="header">
+            <h1>🌍 Country Information Agent</h1>
+            <p>Ask anything about any country in the world</p>
+        </div>
+
+        <div class="input-group">
+            <input
+                type="text"
+                id="questionInput"
+                placeholder="e.g. What is the capital of Japan?"
+                autocomplete="off"
+            />
+            <button id="askButton" onclick="askQuestion()">Ask</button>
+        </div>
+
+        <div class="suggestions">
+            <p>Try asking:</p>
+            <div class="suggestion-chips">
+                <button class="chip" onclick="fillQuestion('What is the population of Germany?')">Population of Germany</button>
+                <button class="chip" onclick="fillQuestion('What currency does Japan use?')">Currency of Japan</button>
+                <button class="chip" onclick="fillQuestion('What is the capital and area of Brazil?')">Capital & area of Brazil</button>
+                <button class="chip" onclick="fillQuestion('What languages are spoken in India?')">Languages in India</button>
+                <button class="chip" onclick="fillQuestion('What are the timezones of Australia?')">Timezones of Australia</button>
+            </div>
+        </div>
+
+        <div class="loader" id="loader">
+            <span>Thinking...</span>
+        </div>
+
+        <div class="result" id="result">
+            <div class="result-box" id="resultBox">
+                <div class="result-label">Answer</div>
+                <div class="result-answer" id="resultAnswer"></div>
+                <div class="result-meta" id="resultMeta"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const input = document.getElementById("questionInput");
+        const button = document.getElementById("askButton");
+        const loader = document.getElementById("loader");
+        const result = document.getElementById("result");
+        const resultBox = document.getElementById("resultBox");
+        const resultAnswer = document.getElementById("resultAnswer");
+        const resultMeta = document.getElementById("resultMeta");
+
+        input.addEventListener("keydown", function (e) {
+            if (e.key === "Enter") askQuestion();
+        });
+
+        function fillQuestion(text) {
+            input.value = text;
+            input.focus();
+        }
+
+        async function askQuestion() {
+            const question = input.value.trim();
+            if (!question) return;
+
+            // Reset UI
+            setLoading(true);
+            result.style.display = "none";
+            resultBox.classList.remove("error");
+            resultAnswer.classList.remove("error");
+
+            try {
+                const response = await fetch("/ask", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ question })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    showError(data.detail || "Something went wrong. Please try again.");
+                    return;
+                }
+
+                showAnswer(data);
+
+            } catch (err) {
+                showError("Could not reach the server. Please try again.");
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        function showAnswer(data) {
+            resultAnswer.textContent = data.answer;
+            resultMeta.textContent = data.country
+                ? `Country: ${data.country} · Fields: ${data.fields_requested.join(", ")}`
+                : "";
+            result.style.display = "block";
+        }
+
+        function showError(message) {
+            resultBox.classList.add("error");
+            resultAnswer.classList.add("error");
+            resultAnswer.textContent = message;
+            resultMeta.textContent = "";
+            result.style.display = "block";
+        }
+
+        function setLoading(isLoading) {
+            button.disabled = isLoading;
+            loader.style.display = isLoading ? "block" : "none";
+        }
+    </script>
+</body>
+</html>
