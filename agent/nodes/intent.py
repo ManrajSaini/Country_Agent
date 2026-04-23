@@ -35,6 +35,7 @@ Question: "What is the population of Narnia?"
 {{"country_name": "Narnia", "requested_fields": ["population"], "is_valid": true}}
 """.format(allowed_fields=ALLOWED_FIELDS)
 
+
 def intent_node(state: AgentState) -> dict:
     """
     Extract country name, requested fields and validity from user question.
