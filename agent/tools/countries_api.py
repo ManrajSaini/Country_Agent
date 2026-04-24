@@ -29,7 +29,11 @@ def fetch_country_data(country_name: str) -> tuple[dict | None, str | None]:
     """
     url = config.api_base_url.format(country=country_name)
     try:
-        response = requests.get(url, timeout=config.request_timeout)
+        response = requests.get(
+            url, 
+            timeout=config.request_timeout,
+            verify=not config.disable_ssl_verify    
+        )
         
         if response.status_code == 404:
             return None, f"Country '{country_name}' not found."

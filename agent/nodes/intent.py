@@ -1,12 +1,14 @@
 import json
 import logging
+import httpx
 from langchain_groq import ChatGroq
 from langchain_core.messages import SystemMessage, HumanMessage
 from config import config
-from tools.countries_api import FIELD_MAP
+from agent.tools.countries_api import FIELD_MAP
 from agent.state import AgentState
 
 logger = logging.getLogger(__name__)
+http_client = httpx.Client(verify=not config.disable_ssl_verify)
 
 ALLOWED_FIELDS = list(FIELD_MAP.keys())
 
@@ -48,6 +50,7 @@ def intent_node(state: AgentState) -> dict:
         model=config.model_name,
         api_key=config.llm_api_key,
         temperature=0,  # dont be creative and give deterministic O/P
+        http_client=http_client
     )
 
     messages = [

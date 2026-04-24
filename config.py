@@ -12,13 +12,15 @@ class Config:
     request_timeout: float
     max_retries: int
     log_level: LOG_LEVELS
+    disable_ssl_verify: bool = False
 
 
 config = Config(
-    model_name = os.getenv("MODEL_NAME", "llama-3.1-8b-instant-on_demand"),
+    model_name = os.getenv("MODEL_NAME", "llama-3.1-8b-instant"),
     llm_api_key = os.getenv("LLM_API_KEY", ""),
     api_base_url = "https://restcountries.com/v3.1/name/{country}",
     request_timeout = 10.0,
     max_retries = 3,
-    log_level = "INFO"
+    log_level = "INFO",
+    disable_ssl_verify=os.getenv("DISABLE_SSL_VERIFY", "false").lower() == "true"
 )

@@ -1,10 +1,12 @@
 import logging
+import httpx
 from langchain_groq import ChatGroq
 from langchain_core.messages import SystemMessage, HumanMessage
 from agent.state import AgentState
 from config import config
 
 logger = logging.getLogger(__name__)
+http_client = httpx.Client(verify=not config.disable_ssl_verify)
 
 SUCCESS_SYSTEM_PROMPT = """
 You are a helpful country information assistant.
@@ -38,6 +40,7 @@ def synthesize_node(state: AgentState) -> dict:
         model=config.model_name,
         api_key=config.llm_api_key,
         temperature=0,
+        http_client=http_client
     )
 
     if tool_error:
